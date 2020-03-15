@@ -14,12 +14,21 @@ class Graph:
     def __len__(self):
         return len(self.vertices)
 
+    def __str__(self):
+        return f'{self.vertices}'
+
     def add_vertex(self, vertex_id):
         """
         Add a vertex to the graph.
         """
         if vertex_id not in self.vertices:
             self.vertices[vertex_id] = set()
+    
+    def get_vertex(self, vertex_id):
+        try:
+            return self.vertices[vertex_id]
+        except:
+            print(f'Vertex {vertex_id} not found!')
 
     def add_edge(self, v1, v2):
         """
