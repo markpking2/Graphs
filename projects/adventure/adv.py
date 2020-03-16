@@ -1,6 +1,9 @@
+import sys
+sys.path.insert(0, '../graph/')
 from room import Room
 from player import Player
 from world import World
+from util import Stack
 
 import random
 from ast import literal_eval
@@ -21,15 +24,47 @@ room_graph=literal_eval(open(map_file, "r").read())
 world.load_graph(room_graph)
 
 # Print an ASCII map
-world.print_rooms()
+# world.print_rooms()
 
+class Graph():
+    def __init__(self, player):
+        self.player = player
+
+    def dft(self):
+        reverse_dirs = {'n': 's', 'e': 'w', 's': 'n', 'w': 'e'}
+        exits = self.player.current_room.get_exits()
+        traveled = Stack()
+        rooms = {}
+        rooms[self.player.current_room.id] = {}
+        path = []
+        for dir in exits:
+            rooms[self.player.current_room.id][dir] = '?'
+
+        while True:    
+            not_visited = [d for d in rooms[self.player.current_room.id] if rooms[self.player.current_room.id][d] == '?']
+            if len(not_visited):
+                next_dir = not_visited.pop()
+                traveled.push(reverse_dirs[next_dir])
+                rooms[self.player.current_room.id][next_dir] = True
+                self.player.travel(next_dir)
+                path.append(next_dir)
+                if self.player.current_room.id not in rooms:
+                    rooms[self.player.current_room.id] = {}
+                    exits = self.player.current_room.get_exits()
+                    for dir in exits:
+                        rooms[self.player.current_room.id][dir] = '?'
+                    rooms[self.player.current_room.id][reverse_dirs[next_dir]] = True
+            else:
+                if traveled.size():
+                    dir = traveled.pop()
+                    self.player.travel(dir)
+                    path.append(dir)
+                else:
+                    return path
+                
 player = Player(world.starting_room)
-
-# Fill this out with directions to walk
-# traversal_path = ['n', 'n']
-traversal_path = []
-
-
+graph = Graph(player)
+traversal_path = graph.dft()
 
 # TRAVERSAL TEST
 visited_rooms = set()
@@ -46,17 +81,15 @@ else:
     print("TESTS FAILED: INCOMPLETE TRAVERSAL")
     print(f"{len(room_graph) - len(visited_rooms)} unvisited rooms")
 
-
-
 #######
 # UNCOMMENT TO WALK AROUND
 #######
-player.current_room.print_room_description(player)
-while True:
-    cmds = input("-> ").lower().split(" ")
-    if cmds[0] in ["n", "s", "e", "w"]:
-        player.travel(cmds[0], True)
-    elif cmds[0] == "q":
-        break
-    else:
-        print("I did not understand that command.")
+# player.current_room.print_room_description(player)
+# while True:
+#     cmds = input("-> ").lower().split(" ")
+#     if cmds[0] in ["n", "s", "e", "w"]:
+#         player.travel(cmds[0], True)
+#     elif cmds[0] == "q":
+#         break
+#     else:
+#         print("I did not understand that command.")
